@@ -1,11 +1,8 @@
 package hello.controller;
 
 import java.util.List;
+import java.util.Random;
 
-import hello.messages.LoginRequest;
-import hello.messages.Message;
-import hello.messages.PhraseRequest;
-import hello.messages.ScoreRequest;
 import hello.model.User;
 import hello.service.PhraseService;
 import hello.service.UserService;
@@ -21,19 +18,31 @@ public class HomeController {
     @Autowired
     private PhraseService phraseService;
 
-    @RequestMapping("/login")
-    public Message login(@RequestBody LoginRequest request) {
-        Message response = new Message();
+    private String generateRandomKey(){
+        Random rand = new Random();
+        String alph = "abcdefghijklmnopqrstuvwxyz0123456789";
+        int n = alph.length();
+        String result = "";
+        for(int i = 0; i < 5; i++){
+            result += alph.charAt(rand.nextInt(n));
+        }
+        return result;
+    }
+
+    //call example "http://localhost:8080/login/name=lavinia&password=lavinia"
+    @RequestMapping(value = "/login/{name}&{password}")
+    public String loginParams(@PathVariable(name = "name") String name,
+                              @PathVariable(name = "password") String password) {
         int existentUser;
 
         //check in the DB
-        User user = userService.findUserByName(request.getName());
+        User user = userService.findUserByName(name);
         if(user == null) {
             //new user
-            userService.saveUser(request.getName(), request.getPassword());
+            userService.saveUser(name, password);
             existentUser = 1;
         } else {
-            if(!user.getPassword().equals(request.getPassword())) {
+            if(!user.getPassword().equals(password)) {
                 //wrong password
                 existentUser = 0;
             } else {
@@ -43,34 +52,47 @@ public class HomeController {
         }
 
         if(existentUser == 1){
-            response.setContent("yes [successful login]");
+            String key = generateRandomKey();
+            //TODO save <key, name> in a map
+            return  "yes [" + key + "]";
         } else {
-            response.setContent("no [wrong password for existing user]");
+            return "no [wrong password for existing user]";
         }
 
-        return response;
     }
 
-    @RequestMapping(value = "/getPhrase", method = RequestMethod.POST)
-    public List<String> getWords(@RequestBody PhraseRequest request) {
-        int level = Integer.parseInt(request.getLevel());
-        int type = Integer.parseInt(request.getType());
+    @RequestMapping(value = "/getPhrase/{level}&{type}")
+    public List<String> getWords(@PathVariable (name = "level") String levelMessage,
+                                 @PathVariable(name = "type") String typeMessage) {
+        int level = Integer.parseInt(levelMessage);
+        int type = Integer.parseInt(typeMessage);
+        //we can change the last param that represents the number of returned phrases
         return phraseService.findPhrases(type, level, 25);
     }
 
-    @RequestMapping(value = "/getTop", method = RequestMethod.GET)
+    @RequestMapping(value = "/getTop")
     public List<User> getTop() {
         return userService.getTop();
     }
 
-    @RequestMapping(value = "/saveScore", method = RequestMethod.POST)
-    public void saveScore(@RequestBody ScoreRequest request){
-        userService.updateScore(request.getName(), request.getScore());
+    @RequestMapping(value = "/saveScore/{name}&{score}")
+    public void saveScore(@PathVariable (name = "name") String name,
+                          @PathVariable (name = "score") String score){
+        userService.updateScore(name, score);
     }
 
-    @RequestMapping(value = "/test")
-    public String test(){
-        return "test";
-    }
+    //TODO
+//    @RequestMapping(value = "/saveScore/{key}&{score}")
+//    public void saveScore(@PathVariable (name = "key") String key,
+//                          @PathVariable (name = "score") String score){
+//        //get the name from the map with <key, name>
+//        userService.updateScore(name, score);
+//    }
+
+    //TODO
+//    @RequestMapping(value = "/logout/{key")
+//    public void logout(@PathVariable (name="key") String key){
+//        //remove <key, name> from the map
+//    }
 
 }
