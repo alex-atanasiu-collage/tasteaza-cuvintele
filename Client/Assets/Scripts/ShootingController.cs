@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
-
+using System.Collections.Generic;
 public class ShootingController : MonoBehaviour {
 
 	public Transform firePoint;
@@ -16,13 +17,88 @@ public class ShootingController : MonoBehaviour {
 	public int indexB = 0;
 
 	private string content;
-	// Use this for initialization
+
+
+    private class Pair {
+        public GameObject cloud;
+        public GameObject word;
+
+        public Pair (GameObject cloud, GameObject word) {
+            this.cloud = cloud;
+            this.word = word;
+        }
+    }
+
+    private TextMesh selected_cloud = null;
+    private HashSet<TextMesh> clouds;
+
+    // Use this for initialization
 	void Start () {
-	
+        clouds = new HashSet<TextMesh>();
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
+
+        foreach (var gameObj in FindObjectsOfType(typeof(TextMesh)) as TextMesh[]) {
+            if (gameObj.gameObject.name == "word") {
+                
+                GameObject word = gameObj.gameObject;
+                GameObject cloud = gameObj.gameObject.transform.parent.gameObject;
+                Debug.Log("Word: " + gameObj.text + "," + word.name + "," + cloud.name);
+
+                clouds.Add(gameObj);
+
+            }
+        }
+        //Debug.Log(clouds.Count);
+
+
+        foreach (char chr in Input.inputString) {
+            char c = Char.ToUpper(chr);
+            //Debug.Log(c);
+            if (selected_cloud == null) {
+                //Debug.Log("selected_cloud == null");
+                foreach (TextMesh current_cloud in clouds) {
+                    //Debug.Log(c + " ??? " + current_cloud.text[0]);
+                    if (current_cloud.text[0] == c) {
+                        selected_cloud = current_cloud;
+                        //Debug.Log("current_cloud.text.Length=" + current_cloud.text.Length);
+                        if (current_cloud.text.Length == 1) {
+                            clouds.Remove(selected_cloud);
+                            Destroy(selected_cloud.gameObject.transform.parent.gameObject);
+                            selected_cloud = null;
+
+                            GameMaster gm = GameObject.Find("GameMaster").GetComponent<GameMaster>();
+                            gm.addPoints(gm.getPointsPerWin());
+                        } else {
+                            current_cloud.text = current_cloud.text.Substring(1);
+
+                        }
+                        break;
+                    }
+                }
+            } else {
+                Debug.Log("selected_cloud == " + selected_cloud.text);
+                string current_word = selected_cloud.text;
+                if (c == current_word[0]) {
+                    if (current_word.Length == 1) {
+                        clouds.Remove(selected_cloud);
+                        Destroy(selected_cloud.gameObject.transform.parent.gameObject);
+                        //Destroy(selected_cloud.cloud);
+                        selected_cloud = null;
+                        GameMaster gm = GameObject.Find("GameMaster").GetComponent<GameMaster>();
+                        gm.addPoints(gm.getPointsPerWin());
+                    } else {
+                        selected_cloud.text = current_word.Substring(1);
+                    }
+                }
+            }
+        }
+
+        /*
+
+
 		foreach (char c in Input.inputString) {
 
 			char C = System.Char.ToUpper (c);
@@ -74,5 +150,6 @@ public class ShootingController : MonoBehaviour {
 				Debug.Log ("Chances left " + chances);
 			}
 		}
+         */
 	}
 }
