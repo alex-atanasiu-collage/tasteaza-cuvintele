@@ -63,7 +63,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Atanasiu Alexandru','alabala',0),(2,'Sirbu Lavinia','lalala',0),(3,'Murgan Ioana','portocale',0),(4,'Zavate Razvan','ciocolata',0),(5,'Gogoanta Mihaela','pramatie',0),(6,'Andrei Stanca','lalalala',0);
+INSERT INTO `users` VALUES (1,'AtanasiuAlexandru','alabala',0),(2,'SirbuLavinia','lalala',0),(3,'MurganIoana','portocale',0),(4,'ZavateRazvan','ciocolata',0),(5,'GogoantaMihaela','pramatie',0),(6,'AndreiStanca','lalalala',0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
