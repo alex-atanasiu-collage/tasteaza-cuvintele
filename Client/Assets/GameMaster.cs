@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.UI;
+using System.Net;
+using System.IO;
 
 public class GameMaster : MonoBehaviour {
     private float cloudSpeed;
@@ -9,13 +12,28 @@ public class GameMaster : MonoBehaviour {
 
     public GameObject cloud;
 
-    bool gameOver;
+    public bool gameOver;
     private float[] positions = { -0.5f, 0.25f, 1.0f };
     private int last_postion = 1;
 
 
     
-    private string[] word_list = { "mere", "pere", "banane", "caise", "dinozaur", "elefant", "fasole", "gradina", "hectar"};
+    private string[] static_word_list = { "mere", "pere", "banane", "caise", "dinozaur", "elefant", "fasole", "gradina", "hectar"};
+
+    private string[] word_list;
+
+    private static string HttpGet (string url) {
+        HttpWebRequest req = WebRequest.Create(url)
+                             as HttpWebRequest;
+        string result = null;
+        using (HttpWebResponse resp = req.GetResponse()
+                                      as HttpWebResponse) {
+            StreamReader reader =
+                new StreamReader(resp.GetResponseStream());
+            result = reader.ReadToEnd();
+        }
+        return result;
+    }
 
     // Use this for initialization
 	void Start () {
@@ -23,14 +41,37 @@ public class GameMaster : MonoBehaviour {
 
         lifes = 3;
         gameOver = false;
+
+       // HttpWebRequest rq = (HttpWebRequest)WebRequest.Create("http://localhost:8080/getPhrase/0&0");
+
+        char[] delimiterChars = { '[', ']', ',', '\"' };
+        string raw_resp = HttpGet("http://localhost:8080/getPhrase/0&0");
+        Debug.Log(raw_resp);
+        string[] aux_word_list = raw_resp.Split(delimiterChars);
+        //word_list[0] = word_list[1];
+
+        List<string> list = new List<string>();
+        foreach (string s in aux_word_list) {
+           // Debug.Log("> \"" + s + "\"");
+            if (s.CompareTo("") != 0) {
+                list.Add(s);
+            }
+        }
+
+        word_list = new string[list.Count];
+        for (int i = 0; i < list.Count; i++) {
+            word_list[i] = list[i];
+            Debug.Log(list[i]);
+        }
 	}
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update () {
         cloudSpeed += 0.001f;
         //Debug.Log("Cloud speed: " + cloudSpeed);
         if (gameOver) {
-            GameObject.Find("LevelText").GetComponent<Text>().text = "Game over at level " + (int)(cloudSpeed * 2 - 1);
+            GameObject.Find("LevelText").GetComponent<Text>().text = "Game over at level " + (int)(cloudSpeed * 2 - 1) + ". Enter your name: ";
+            GameObject.Find("InputField").GetComponent<RectTransform>().anchoredPosition = new Vector3(0, GameObject.Find("InputField").GetComponent<RectTransform>().anchoredPosition.y, 0);
             return;
         }
 
@@ -76,6 +117,7 @@ public class GameMaster : MonoBehaviour {
                 current_word = word_list[Random.Range(0, word_list.Length)].ToUpper();
                 foreach (var gameObj in FindObjectsOfType(typeof(TextMesh)) as TextMesh[]) {
                     string cloud_word = gameObj.text;
+                    Debug.Log(">>>" + cloud_word);
                     if (cloud_word[0] == current_word[0]) {
                         already_one_word = true;
                         break;
@@ -117,5 +159,11 @@ public class GameMaster : MonoBehaviour {
 
     public int getRemainingLifes () {
         return lifes;
+    }
+
+    public void SendScore () {
+        string url = "http://localhost:8080/saveScore/" + GameObject.Find("InputText").GetComponent<Text>().text + "&" + points;
+        Debug.Log("Sending to " + url);
+        HttpGet(url);
     }
 }

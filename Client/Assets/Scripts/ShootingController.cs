@@ -38,6 +38,9 @@ public class ShootingController : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
+        if (GameObject.Find("GameMaster").GetComponent<GameMaster>().gameOver) {
+            return;
+        }
 
         foreach (var gameObj in FindObjectsOfType(typeof(TextMesh)) as TextMesh[]) {
             if (gameObj.gameObject.name == "word") {
@@ -76,6 +79,7 @@ public class ShootingController : MonoBehaviour {
                         } else {
                             current_cloud.text = current_cloud.text.Substring(1);
 
+                            current_cloud.transform.parent.GetComponent<SpriteRenderer>().color = new Color(0.57f, 0.77f, 0.71f);
                         }
                         break;
                     }
